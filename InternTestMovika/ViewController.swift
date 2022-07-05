@@ -12,16 +12,18 @@ class ViewController: UIViewController {
     
     let tapGesture = UITapGestureRecognizer()
     
-    let playerOne = AVPlayer(url: URL(fileURLWithPath: Bundle.main.path(forResource: "video", ofType: "mp4")!))
-    let playerTwo = AVPlayer(url: URL(fileURLWithPath: Bundle.main.path(forResource: "video2", ofType: "mp4")!))
+    let player = AVPlayer()
+    let firstVideo = AVPlayerItem(url: URL(fileURLWithPath: Bundle.main.path(forResource: "video", ofType: "mp4")!))
+    let secondVideo = AVPlayerItem(url: URL(fileURLWithPath: Bundle.main.path(forResource: "video2", ofType: "mp4")!))
+    
     var layer = AVPlayerLayer()
     let shapeLayer = CAShapeLayer()
     
     var timer = Timer()
     var durationTimer = 10
     
-    private var buttonCenterX: NSLayoutConstraint?
-    private var buttonCenterY: NSLayoutConstraint?
+    private var buttonLeadingConstraint: NSLayoutConstraint?
+    private var buttonTopConstraint: NSLayoutConstraint?
     
     var buttonTest: UIButton = {
         var button = UIButton()
@@ -35,7 +37,6 @@ class ViewController: UIViewController {
     
     @objc func testTap() {
         
-        playerOne.pause()
         timerLabel.isHidden = true
         shapeLayer.strokeColor = UIColor.clear.cgColor
         buttonTest.alpha = 0
@@ -44,7 +45,7 @@ class ViewController: UIViewController {
     
     let timerLabel: UILabel = {
         var label = UILabel()
-        label.font = UIFont.boldSystemFont(ofSize: 50)
+        label.font = UIFont.boldSystemFont(ofSize: 40)
         label.textColor = .black
         label.numberOfLines = 0
         label.textAlignment = .center
@@ -72,8 +73,8 @@ class ViewController: UIViewController {
     func animation() {
         
         let circularPath = UIBezierPath()
-        let dotOne = CGPoint(x: 25, y: 30)
-        let dotTwo = CGPoint(x: 25, y: view.frame.height - 30)
+        let dotOne = CGPoint(x: 60, y: 30)
+        let dotTwo = CGPoint(x: 60, y: view.frame.height - 30)
         let dotThree = CGPoint(x: 870, y: 30)
         let dotFour = CGPoint(x: 870, y: view.frame.height - 30)
         
@@ -83,7 +84,7 @@ class ViewController: UIViewController {
         circularPath.addLine(to: dotFour)
         
         shapeLayer.path = circularPath.cgPath
-        shapeLayer.lineWidth = 21
+        shapeLayer.lineWidth = 20
         shapeLayer.lineCap = CAShapeLayerLineCap.round
         
         shapeLayer.strokeColor = UIColor.red.cgColor
@@ -102,40 +103,43 @@ class ViewController: UIViewController {
     }
     
     func player1() {
-        layer = AVPlayerLayer(player: playerOne)
+        layer = AVPlayerLayer(player: player)
         layer.frame = view.bounds
         layer.videoGravity = .resizeAspect
+        player.replaceCurrentItem(with: firstVideo)
         view.layer.addSublayer(layer)
     }
     
     func player2() {
-        layer = AVPlayerLayer(player: playerTwo)
+        layer = AVPlayerLayer(player: player)
         layer.frame = view.bounds
         layer.videoGravity = .resizeAspect
-        playerTwo.play()
+        player.replaceCurrentItem(with: secondVideo)
+        player.play()
+        view.isUserInteractionEnabled = false
         view.layer.addSublayer(layer)
     }
     
     func setupConstraint() {
         
         let timerTopConstraint = timerLabel.topAnchor.constraint(equalTo: view.topAnchor, constant: 30)
-        let timerLeadingConstraint = timerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 35)
+        let timerLeadingConstraint = timerLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 5)
         
-        self.buttonCenterX = buttonTest.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 30)
-        self.buttonCenterY = buttonTest.topAnchor.constraint(equalTo: view.topAnchor,constant: 150)
+        self.buttonLeadingConstraint = buttonTest.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 60)
+        self.buttonTopConstraint = buttonTest.topAnchor.constraint(equalTo: view.topAnchor,constant: 150)
         let buttonHeight = buttonTest.heightAnchor.constraint(equalToConstant: 100)
         let buttonWidth = buttonTest.widthAnchor.constraint(equalToConstant: 100)
         
         NSLayoutConstraint.activate([
-            timerTopConstraint, timerLeadingConstraint, buttonHeight, buttonWidth, self.buttonCenterX, self.buttonCenterY
+            timerTopConstraint, timerLeadingConstraint, buttonHeight, buttonWidth, self.buttonLeadingConstraint, self.buttonTopConstraint
         ].compactMap({$0}))
     }
     
     func animateButton() {
-        UIView.animate(withDuration: 10, delay: 2, usingSpringWithDamping: 0.2, initialSpringVelocity: 10, options: .allowUserInteraction) {
+        UIView.animate(withDuration: 3, delay: 2, usingSpringWithDamping: 0.2, initialSpringVelocity: 1, options: .allowUserInteraction) {
             
-            self.buttonCenterX?.constant = 760
-            self.buttonCenterY?.constant = 150
+            self.buttonLeadingConstraint?.constant = 760
+            self.buttonTopConstraint?.constant = 50
             
             self.view.layoutIfNeeded()
         }
@@ -149,14 +153,14 @@ class ViewController: UIViewController {
     @objc func handleTap(_ gestureRecognizer: UITapGestureRecognizer) {
         guard self.tapGesture === gestureRecognizer else { return }
         
-        UIView.animate(withDuration: 3, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut) {
+        UIView.animate(withDuration: 3, delay: 0, usingSpringWithDamping: 1, initialSpringVelocity: 1, options: .curveEaseOut) { [self] in
             self.timer = Timer.scheduledTimer(timeInterval: 1, target: self, selector: #selector(self.timerAction), userInfo: nil, repeats: true)
             self.buttonTest.alpha = 1
             self.timerLabel.alpha = 1
             self.animation()
             self.basicAnimation()
             self.animateButton()
-            self.playerOne.play()
+            self.player.play()
         }
     }
     @objc func timerAction() {
@@ -171,5 +175,3 @@ class ViewController: UIViewController {
         }
     }
 }
-
-
